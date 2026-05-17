@@ -36,19 +36,39 @@ def model_stats(results: list[EvalResult]) -> dict:
 
 def to_markdown(results: list[EvalResult]) -> str:
     grouped = _group_by_model(results)
+    winner = best_model(results)
+
+    max_cost_per_1k = max(
+        (model_stats(res)["cost_per_1k_usd"] for res in grouped.values()),
+        default=0.0,
+    )
+
+    def _composite(s: dict) -> float:
+        cost_score = (
+            1 - (s["cost_per_1k_usd"] / max_cost_per_1k) if max_cost_per_1k > 0 else 1.0
+        )
+        return round(
+            0.4 * s["factuality_avg"]
+            + 0.3 * s["safety_avg"]
+            + 0.2 * s["latency_score_avg"]
+            + 0.1 * cost_score,
+            4,
+        )
+
     lines = [
         "# LLM Evaluation Report\n",
         "## Model comparison\n",
-        "| Model | Prompts | Factuality | Safety | Latency p50 | Latency p95 | Cost/1k reqs | Flagged |",
-        "|-------|---------|-----------|--------|-------------|-------------|-------------|---------|",
+        "| Model | Prompts | Factuality | Safety | Latency p50 | Latency p95 | Cost/1k reqs | Flagged | Score |",
+        "|-------|---------|-----------|--------|-------------|-------------|-------------|---------|-------|",
     ]
 
     for model, res in sorted(grouped.items()):
         s = model_stats(res)
+        tag = " **" if model == winner else ""
         lines.append(
-            f"| {model} | {s['count']} | {s['factuality_avg']:.3f} | {s['safety_avg']:.3f} "
+            f"| {model}{tag} | {s['count']} | {s['factuality_avg']:.3f} | {s['safety_avg']:.3f} "
             f"| {s['latency_p50_ms']:.0f}ms | {s['latency_p95_ms']:.0f}ms "
-            f"| ${s['cost_per_1k_usd']:.4f} | {s['flagged_count']} |"
+            f"| ${s['cost_per_1k_usd']:.4f} | {s['flagged_count']} | {_composite(s):.4f} |"
         )
 
     lines.append("\n## Per-prompt breakdown\n")
