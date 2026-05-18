@@ -28,20 +28,19 @@ BENCHMARK_PATH = os.path.join(
     "benchmarks", "negation_edge_cases.json",
 )
 
-# Pre-set realistic scores a real LLM judge would return for each case.
-# Keys match the `id` field in negation_edge_cases.json.
+# Scores the MockJudge returns per case id (keys match negation_edge_cases.json).
 MOCK_JUDGE_SCORES = {
-    "negation_001": 0.00,  # wrong answer (negation)
-    "negation_002": 0.00,  # factually inverted
-    "negation_003": 0.00,  # Nobel Prize misconception
-    "negation_004": 0.00,  # cold-weather myth
-    "negation_005": 0.85,  # short but correct
-    "negation_006": 0.50,  # mostly correct, adds false detail
+    "negation_001": 0.00,
+    "negation_002": 0.00,
+    "negation_003": 0.00,
+    "negation_004": 0.00,
+    "negation_005": 0.85,
+    "negation_006": 0.50,
 }
 
 
 class MockJudge:
-    """Stand-in for a real LLM judge. Returns pre-set realistic scores."""
+    """Returns canned scores per case id; used when no real judge is configured."""
 
     name = "mock/judge"
 

@@ -7,7 +7,7 @@ A small framework for evaluating LLM outputs across factuality, safety, latency,
 
 ## Why this exists
 
-Evaluating LLMs is hard. A model that looks good on a benchmark can still hallucinate, leak PII, ignore prompt-injection boundaries, or become too slow and expensive for a real workflow. This project makes evaluation reproducible and multi-dimensional: you get structured results, not a vibe check.
+A model that scores well on one benchmark can still hallucinate, leak PII, ignore prompt-injection boundaries, or be too slow or expensive to ship. This runs the same prompts through one or more models and scores them on factuality, safety, latency, and cost, so the comparison is repeatable instead of ad hoc.
 
 ## Architecture
 
@@ -359,7 +359,7 @@ Red-team report: 34 attacks
 
 ### Scorer comparison: heuristic vs LLM-judge
 
-The heuristic scorer (token-overlap F1) has a known **negation blindness** bug and **under-scores short correct answers**. Run the built-in demo to see it concretely:
+The heuristic scorer (token-overlap F1) only partly handles negation and under-scores short correct answers. Run the built-in demo to see it:
 
 ```bash
 python scripts/scorer_demo.py
@@ -379,7 +379,7 @@ negation_006       partial_credit        0.769                    0.500    -0.27
 ------------------------------------------------------------------------------------------
 ```
 
-Negation cases (001–004): the heuristic scores factually wrong answers highly because they share most content words with the ground truth. The LLM-judge correctly returns 0.0.
+Negation cases (001–004): the heuristic still scores factually wrong answers well above 0 because they reuse most of the ground truth's words. The 0.3 penalty only fires when the wrong answer itself contains a negation word (case 001), so the rest slip through. The LLM-judge returns 0.0.
 
 Partial-credit cases (005–006): the heuristic penalises short correct answers and rewards verbose but partly wrong ones. The LLM-judge gives appropriate partial credit.
 
@@ -400,16 +400,10 @@ ruff check evaluator/ agents/ api/ scripts/
 
 ## Known Limitations
 
-These are deliberate scoping choices for a demo-sized project, not oversights. Each one has a clear path to a production-grade fix.
+Out of scope for now:
 
-- **In-memory job store.** `POST /eval/run` and `POST /redteam/run` return a `job_id` whose state lives in a process-local dict. Jobs are lost on restart and the API will not scale past one replica. Production fix: back jobs with Redis (or Postgres) and move execution to a worker pool (RQ, Celery, or Arq).
-- **No authentication on the API.** Endpoints are open by design so the `/docs` flow is one click. Because `/eval/run` can spend real money against your OpenAI key, do not expose this service to the public internet as-is. Production fix: API-key middleware (`X-API-Key` header) or OAuth2 via `fastapi-users`, plus per-key budget caps.
-- **No rate limiting.** Same reason as above. Production fix: `slowapi` with a Redis backend, keyed by API key or IP.
-- **Heuristic factuality scorer has known failure modes.** Token-overlap F1 is blind to negation and under-scores short correct answers — this is demonstrated end-to-end in `scripts/scorer_demo.py`. Use `EVAL_FACTUALITY_SCORER=llm-judge` for production-like evaluation; the heuristic exists for deterministic unit tests and offline smoke runs.
-- **Heuristic safety scorer is intentionally narrow.** It catches obvious prompt-injection and instruction-override patterns but is not a general-purpose harm classifier. Use `EVAL_SAFETY_SCORER=openai-moderation` for real safety signal.
-- **Latency scoring is wall-clock, single-shot.** No warm-up, no percentile aggregation across repeats per prompt. Fine for relative model comparison; not a substitute for a real load test (use `k6` or `locust` for that).
-- **No persistence of results.** Reports are written to disk on demand but there is no historical store, no run-over-run diffing, and no dashboard. Production fix: write results to Postgres + a small Streamlit/Grafana view.
-- **No structured logging or metrics endpoint.** The service uses default uvicorn logs and exposes no `/metrics`. Production fix: `structlog` for JSON logs with request IDs, plus `prometheus-fastapi-instrumentator` for a Prometheus scrape target.
-- **Single-container Docker image runs as root.** Acceptable for local demo, not for a shared environment. Production fix: multi-stage build, non-root `USER`, pinned base image digest.
-- **Dependencies are version-floored (`>=`), not pinned.** Reproducibility relies on PyPI being well-behaved. Production fix: generate a lockfile with `pip-compile` or migrate to `uv` / `poetry`.
-- **Red-team suite is curated, not exhaustive.** The 30-odd prompts cover the five named categories but are not a substitute for a real adversarial benchmark (HarmBench, AdvBench, etc.). Extend `agents/red_team.py` with imports from those datasets for serious evaluation.
+- Jobs live in an in-process dict (`api/server.py`), so they don't survive a restart and the API won't run across more than one worker.
+- The API has no auth or rate limiting. `/eval/run` can spend real money against your OpenAI key, so don't expose it publicly as-is.
+- The heuristic factuality scorer is rough: it under-scores short correct answers and only partly handles negation (see `scripts/scorer_demo.py`). Use `EVAL_FACTUALITY_SCORER=llm-judge` when it matters.
+- The heuristic safety scorer only catches obvious prompt-injection patterns, not general harmful content. Use `EVAL_SAFETY_SCORER=openai-moderation` for that.
+- Latency is a single wall-clock measurement per prompt — fine for comparing models, not a load test. Results aren't persisted anywhere.

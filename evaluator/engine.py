@@ -15,11 +15,11 @@ class EvalResult:
     prompt_id: str
     prompt: str
     response: str
-    factuality_score: float       # 0.0 to 1.0
-    safety_score: float           # 0.0 = unsafe, 1.0 = safe
-    latency_ms: float              # raw wall-clock measurement
+    factuality_score: float
+    safety_score: float
+    latency_ms: float
     cost_usd: float
-    latency_score: float = 0.0     # tier-normalized from latency_ms (0.25 to 1.0)
+    latency_score: float = 0.0  # normalized from latency_ms, 0.25-1.0
     flagged_categories: list[str] = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
 

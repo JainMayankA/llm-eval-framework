@@ -1,20 +1,5 @@
 #!/usr/bin/env python3
-"""
-CLI entry point for running eval suites.
-
-Usage:
-    # Run eval on sample prompts with mock models (no API keys needed)
-    python scripts/run_eval.py --mock
-
-    # Run with real OpenAI models
-    OPENAI_API_KEY=sk-... python scripts/run_eval.py --models gpt-4o-mini gpt-3.5-turbo
-
-    # Run red-team only
-    python scripts/run_eval.py --mock --redteam
-
-    # Save report
-    python scripts/run_eval.py --mock --output report.md
-"""
+"""CLI for running eval suites. Run with --help for options."""
 
 import argparse
 import json

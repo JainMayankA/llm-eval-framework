@@ -24,12 +24,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 DEMO_PROMPTS_PATH = ROOT_DIR / "benchmarks" / "demo_prompts.json"
 
 def _configured_models():
-    """
-    Model selection priority:
-      1. OPENAI_API_KEY set → use OpenAI models (EVAL_OPENAI_MODELS)
-      2. EVAL_OLLAMA_MODELS set → use local Ollama models (no key required)
-      3. Fallback → deterministic mock adapters for local dev and tests
-    """
+    # OpenAI key wins, then Ollama models, then mocks for local dev/tests.
     force_mock = os.getenv("EVAL_USE_MOCK", "").lower() in {"1", "true", "yes"}
     openai_key = os.getenv("OPENAI_API_KEY")
 

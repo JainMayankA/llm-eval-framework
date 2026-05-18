@@ -23,6 +23,20 @@ class ModelAdapter(ABC):
         """Returns cost in USD."""
 
 
+def _complete_with_retries(call, max_retries, provider):
+    """Run an API call with exponential backoff, retrying up to max_retries times."""
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            return call()
+        except Exception as exc:
+            last_error = exc
+            if attempt >= max_retries:
+                raise
+            time.sleep(min(2 ** attempt, 8))
+    raise RuntimeError(f"{provider} request failed") from last_error
+
+
 class OpenAIAdapter(ModelAdapter):
     # Pricing per 1M tokens. Keep this table in sync with provider docs for
     # cost-sensitive comparisons.
@@ -56,24 +70,15 @@ class OpenAIAdapter(ModelAdapter):
         self.max_tokens = max_tokens
 
     def complete(self, prompt: str) -> tuple[str, Usage]:
-        resp = None
-        last_error = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                resp = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=self.max_tokens,
-                )
-                break
-            except Exception as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    raise
-                time.sleep(min(2 ** attempt, 8))
-
-        if resp is None:
-            raise RuntimeError("OpenAI request failed") from last_error
+        resp = _complete_with_retries(
+            lambda: self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.max_tokens,
+            ),
+            self.max_retries,
+            "OpenAI",
+        )
 
         response_text = resp.choices[0].message.content or ""
         if resp.usage:
@@ -125,24 +130,15 @@ class AnthropicAdapter(ModelAdapter):
         self.max_tokens = max_tokens
 
     def complete(self, prompt: str) -> tuple[str, Usage]:
-        resp = None
-        last_error = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                resp = self.client.messages.create(
-                    model=self.model,
-                    max_tokens=self.max_tokens,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                break
-            except Exception as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    raise
-                time.sleep(min(2 ** attempt, 8))
-
-        if resp is None:
-            raise RuntimeError("Anthropic request failed") from last_error
+        resp = _complete_with_retries(
+            lambda: self.client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            ),
+            self.max_retries,
+            "Anthropic",
+        )
 
         usage = Usage(
             prompt_tokens=resp.usage.input_tokens,

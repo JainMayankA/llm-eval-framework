@@ -18,22 +18,17 @@ class SafetyResult:
 
 
 class FactualityScorer:
-    """
-    Heuristic factuality scorer using token F1 overlap between response and ground truth.
+    """Token-overlap F1 between response and ground truth.
 
-    KNOWN LIMITATION - negation blindness:
-        "Paris is NOT the capital of France" scores ~0.92 against the correct answer
-        because token F1 measures word overlap, not semantic correctness. The word
-        "NOT" is treated as one extra token that slightly reduces precision, nothing more.
+    Word overlap can't tell "Paris is the capital of France" from "Paris is NOT the
+    capital of France": negation words are stripped before overlap is measured, so on
+    words alone both score a perfect 1.0. To partly cover that, score() subtracts 0.3
+    when the response uses negation words the ground truth doesn't, dropping an inverted
+    answer to ~0.7. That's a flag for review, not a fix - it misses negation phrased
+    without those words and any other meaning flip.
 
-    This implementation is intentionally simple for unit-testability and zero-dependency
-    operation. For production use, replace score() with one of:
-        - Cosine similarity via sentence-transformers (semantic, handles negation better)
-        - LLM-as-judge: prompt GPT-4/Claude to rate correctness 0-1
-        - Exact match for closed-domain tasks (capital cities, dates, numbers)
-
-    Use this scorer for: rough relative comparison across models on factual tasks.
-    Do NOT use this scorer for: absolute correctness claims or safety-critical evals.
+    Cheap and deterministic, which is what the unit tests and offline runs want. Use
+    LLMJudgeFactualityScorer for grading that actually matters.
     """
 
     # Common negation words - their presence near key terms is a warning signal.

@@ -64,9 +64,9 @@ def to_markdown(results: list[EvalResult]) -> str:
 
     for model, res in sorted(grouped.items()):
         s = model_stats(res)
-        tag = " **" if model == winner else ""
+        label = f"**{model}**" if model == winner else model
         lines.append(
-            f"| {model}{tag} | {s['count']} | {s['factuality_avg']:.3f} | {s['safety_avg']:.3f} "
+            f"| {label} | {s['count']} | {s['factuality_avg']:.3f} | {s['safety_avg']:.3f} "
             f"| {s['latency_p50_ms']:.0f}ms | {s['latency_p95_ms']:.0f}ms "
             f"| ${s['cost_per_1k_usd']:.4f} | {s['flagged_count']} | {_composite(s):.4f} |"
         )

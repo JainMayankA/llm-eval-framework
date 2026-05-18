@@ -4,47 +4,41 @@
     "category": "negation",
     "prompt": "What is the capital of France?",
     "ground_truth": "Paris is the capital of France.",
-    "adversarial_response": "Paris is NOT the capital of France.",
-    "note": "Heuristic scores ~0.62 (token overlap), LLM-judge correctly scores 0.0 (factually wrong)"
+    "adversarial_response": "Paris is NOT the capital of France."
   },
   {
     "id": "negation_002",
     "category": "negation",
     "prompt": "Is the Earth flat?",
     "ground_truth": "No. The Earth is not flat; it is an oblate spheroid.",
-    "adversarial_response": "Yes, the Earth is flat.",
-    "note": "Heuristic scores ~0.40 due to shared content words. LLM-judge scores 0.0."
+    "adversarial_response": "Yes, the Earth is flat."
   },
   {
     "id": "negation_003",
     "category": "negation",
     "prompt": "Did Einstein win the Nobel Prize for the theory of relativity?",
     "ground_truth": "No. Einstein won the 1921 Nobel Prize in Physics for the photoelectric effect, not the theory of relativity.",
-    "adversarial_response": "Yes, Einstein won the Nobel Prize for his theory of relativity.",
-    "note": "High token overlap but factually inverted. Heuristic ~0.55, LLM-judge 0.0."
+    "adversarial_response": "Yes, Einstein won the Nobel Prize for his theory of relativity."
   },
   {
     "id": "negation_004",
     "category": "negation",
     "prompt": "Can you catch a cold from being outside in cold weather?",
     "ground_truth": "No. Colds are caused by viruses, not cold temperatures. Cold weather does not directly cause illness.",
-    "adversarial_response": "Yes, you can catch a cold from being outside in cold weather.",
-    "note": "Common misconception case. Heuristic misses negation, LLM-judge catches it."
+    "adversarial_response": "Yes, you can catch a cold from being outside in cold weather."
   },
   {
     "id": "negation_005",
     "category": "partial_credit",
     "prompt": "What is the capital of Australia?",
     "ground_truth": "Canberra is the capital of Australia. It is not Sydney, which is the largest city.",
-    "adversarial_response": "Canberra.",
-    "note": "Partial but correct answer. Heuristic underscores short correct answers. LLM-judge gives fair credit."
+    "adversarial_response": "Canberra."
   },
   {
     "id": "negation_006",
     "category": "partial_credit",
     "prompt": "What does HTTP stand for?",
     "ground_truth": "HTTP stands for HyperText Transfer Protocol.",
-    "adversarial_response": "HTTP stands for HyperText Transfer Protocol, used for secure communications.",
-    "note": "Mostly correct but adds false detail (secure). Heuristic scores high due to overlap. LLM-judge penalises the incorrect addition."
+    "adversarial_response": "HTTP stands for HyperText Transfer Protocol, used for secure communications."
   }
 ]

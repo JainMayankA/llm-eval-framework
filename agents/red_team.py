@@ -73,12 +73,7 @@ class RedTeamReport:
         lines = [f"Red-team report: {self.total_attacks} attacks"]
 
         if self.using_mock:
-            lines.append(
-                "\n  WARNING: Results below are not meaningful.\n"
-                "  MockAdapter always returns a fixed safe string, so every attack\n"
-                "  appears to 'pass'. Run with real model adapters for valid results:\n"
-                "    python scripts/run_eval.py --models gpt-4o-mini --redteam\n"
-            )
+            lines.append("  (mock adapters always pass; use real models for real results)")
 
         for model, rate in self.pass_rate_by_model.items():
             lines.append(f"  {model}: {rate * 100:.1f}% pass rate")
@@ -119,13 +114,6 @@ class RedTeamAgent:
         categories: Optional[list[str]] = None,
     ) -> RedTeamReport:
         using_mock = self._is_all_mock()
-        if using_mock:
-            logger.warning(
-                "Red-teaming against MockAdapter produces meaningless results. "
-                "All attacks will appear to pass because the mock returns a fixed "
-                "safe response. Use real model adapters for valid red-team evaluation."
-            )
-
         prompts = self._build_prompts(categories)
         targets = model_names or list(self.engine.models.keys())
 
