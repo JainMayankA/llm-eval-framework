@@ -171,12 +171,18 @@ class OllamaAdapter(ModelAdapter):
         max_tokens: int = 512,
         base_url: str = "http://localhost:11434/v1",
         timeout: Optional[float] = None,
+        max_retries: Optional[int] = None,
     ):
         import openai
         self.model = model
         self.name = f"ollama/{model}"
         self.max_tokens = max_tokens
         self.timeout = timeout or float(os.getenv("EVAL_PROVIDER_TIMEOUT_SECONDS", "60"))
+        self.max_retries = (
+            max_retries
+            if max_retries is not None
+            else int(os.getenv("EVAL_PROVIDER_MAX_RETRIES", "2"))
+        )
         self.client = openai.OpenAI(
             base_url=base_url,
             api_key="ollama",  # Ollama accepts any non-empty string
@@ -185,10 +191,14 @@ class OllamaAdapter(ModelAdapter):
         )
 
     def complete(self, prompt: str) -> tuple[str, Usage]:
-        resp = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=self.max_tokens,
+        resp = _complete_with_retries(
+            lambda: self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.max_tokens,
+            ),
+            self.max_retries,
+            "Ollama",
         )
         response_text = resp.choices[0].message.content or ""
         if resp.usage:

@@ -262,7 +262,7 @@ http://localhost:8000
 | `EVAL_PROVIDER_MAX_RETRIES` | `2` | Provider retry count |
 | `EVAL_USE_MOCK` | `false` | Force API mock mode even when keys are present |
 
-Provider adapters use the shared timeout and retry controls. OpenAI and Anthropic clients both disable SDK retries and apply explicit retry/backoff in the adapter.
+All provider adapters (OpenAI, Anthropic, Ollama) use the shared timeout and retry controls: they disable the SDK's own retries and apply explicit retry/backoff in the adapter.
 
 ## Extending
 
@@ -320,19 +320,19 @@ python scripts/run_eval.py --models gpt-4o-mini --prompts benchmarks/my_prompts.
 Running the framework against two mock models across 50 prompts (5 categories):
 
 ```
-| Model        | Prompts | Factuality | Safety | Latency p50 | Latency p95 | Cost/1k reqs | Flagged |
-|--------------|---------|------------|--------|-------------|-------------|--------------|---------|
-| mock/model-a |      50 |      0.016 |  1.000 |         10ms|         10ms|       $0.0000|       0 |
-| mock/model-b |      50 |      0.017 |  1.000 |         10ms|         11ms|       $0.0000|       0 |
+| Model            | Prompts | Factuality | Safety | Latency p50 | Latency p95 | Cost/1k reqs | Flagged | Score  |
+|------------------|---------|------------|--------|-------------|-------------|--------------|---------|--------|
+| mock/model-a     |      50 |      0.016 |  1.000 |         10ms|         10ms|       $0.0000|       0 | 0.6064 |
+| **mock/model-b** |      50 |      0.017 |  1.000 |         10ms|         11ms|       $0.0000|       0 | 0.6068 |
 ```
 
 With real providers (representative numbers — actual results vary by prompt set):
 
 ```
-| Model              | Prompts | Factuality | Safety | Latency p50 | Latency p95 | Cost/1k reqs | Flagged |
-|--------------------|---------|------------|--------|-------------|-------------|--------------|---------|
-| openai/gpt-4o      |      50 |      0.820 |  1.000 |       1180ms|       2340ms|       $0.2300|       0 |
-| openai/gpt-4o-mini |      50 |      0.743 |  1.000 |        620ms|       1050ms|       $0.0180|       0 |
+| Model                  | Prompts | Factuality | Safety | Latency p50 | Latency p95 | Cost/1k reqs | Flagged | Score |
+|------------------------|---------|------------|--------|-------------|-------------|--------------|---------|-------|
+| openai/gpt-4o          |      50 |      0.820 |  1.000 |       1180ms|       2340ms|       $0.2300|       0 |  0.77 |
+| **openai/gpt-4o-mini** |      50 |      0.743 |  1.000 |        620ms|       1050ms|       $0.0180|       0 |  0.86 |
 ```
 
 > Best model (composite score): **openai/gpt-4o-mini** — factuality is 10% lower but costs 93% less and is 47% faster. Whether that tradeoff is acceptable depends on your SLA.
