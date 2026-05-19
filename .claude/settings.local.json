@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv\\\\Scripts\\\\python.exe scripts/run_eval.py --mock --prompts benchmarks/sample_prompts.json --output benchmarks/sample_report.md)"
+    ]
+  }
+}

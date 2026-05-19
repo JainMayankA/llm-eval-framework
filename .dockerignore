@@ -1,0 +1,9 @@
+.venv/
+.git/
+.ruff_cache/
+.claude/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.env
+benchmarks/sample_report.md

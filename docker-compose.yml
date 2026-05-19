@@ -1,0 +1,22 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EVAL_OPENAI_MODELS: ${EVAL_OPENAI_MODELS:-gpt-4o-mini}
+      EVAL_FACTUALITY_SCORER: ${EVAL_FACTUALITY_SCORER:-heuristic}
+      EVAL_JUDGE_MODEL: ${EVAL_JUDGE_MODEL:-gpt-4o-mini}
+      EVAL_SAFETY_SCORER: ${EVAL_SAFETY_SCORER:-heuristic}
+      EVAL_MODERATION_MODEL: ${EVAL_MODERATION_MODEL:-omni-moderation-latest}
+      EVAL_PROVIDER_TIMEOUT_SECONDS: ${EVAL_PROVIDER_TIMEOUT_SECONDS:-30}
+      EVAL_PROVIDER_MAX_RETRIES: ${EVAL_PROVIDER_MAX_RETRIES:-2}
+      EVAL_USE_MOCK: ${EVAL_USE_MOCK:-false}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
